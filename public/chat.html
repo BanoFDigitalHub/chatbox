@@ -75,6 +75,18 @@
       <div class="emoji-grid" id="emojiGrid"></div>
     </div>
 
+    <!-- Reply preview — WhatsApp style, dikhta hai jab kisi bubble ko reply ke liye select karo -->
+    <div id="replyPreviewBar" class="reply-preview-bar hidden">
+      <span class="reply-preview-line"></span>
+      <div class="reply-preview-text">
+        <span class="reply-preview-name" id="replyPreviewName"></span>
+        <span class="reply-preview-snippet" id="replyPreviewSnippet"></span>
+      </div>
+      <button type="button" id="cancelReplyBtn" class="icon-btn" aria-label="Reply cancel karo">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+
     <form id="composer" class="composer">
       <button type="button" id="emojiBtn" class="icon-btn" aria-label="Emoji picker">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>

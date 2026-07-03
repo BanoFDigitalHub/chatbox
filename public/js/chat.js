@@ -59,6 +59,11 @@
   const modalMediaWrap = document.getElementById('modalMediaWrap');
   const closeModalBtn = document.getElementById('closeModalBtn');
 
+  const replyPreviewBar = document.getElementById('replyPreviewBar');
+  const replyPreviewName = document.getElementById('replyPreviewName');
+  const replyPreviewSnippet = document.getElementById('replyPreviewSnippet');
+  const cancelReplyBtn = document.getElementById('cancelReplyBtn');
+
   const avatarModal = document.getElementById('avatarModal');
   const avatarViewPhoto = document.getElementById('avatarViewPhoto');
   const avatarViewName = document.getElementById('avatarViewName');
@@ -72,6 +77,8 @@
     '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>';
   const playIconSvg = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
   const pauseIconSvg = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>';
+  const replyIconSvg =
+    '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17l-5-5 5-5"/><path d="M4 12h11a5 5 0 0 1 5 5v2"/></svg>';
 
   const QUICK_REACTIONS = ['❤️', '👍', '😂', '🔥', '😮', '😢'];
   const EMOJI_CATEGORIES = {
@@ -83,6 +90,9 @@
     Activities: ['⚽', '🏏', '🎮', '🎧', '🎬', '📚', '✈️', '🎉', '🔥', '⭐', '💯', '✅']
   };
 
+  // Media upload cap: choti/lambi dono videos bhejne ke liye 300MB tak allow.
+  const MAX_MEDIA_BYTES = 300 * 1024 * 1024;
+
   const messagesById = new Map();
   const renderedIds = new Set();
   let myProfile = { avatarUrl: '', nicknameForOther: '', wallpaper: 'default', themeColor: 'teal' };
@@ -90,6 +100,52 @@
   let emojiGridBuilt = false;
   let lastKnownOnline = false;
   let lastKnownSeen = null;
+  let replyTarget = null;
+
+  // ---------- mobile keyboard fix (header ko top pr fixed rakhna) ----------
+  //
+  // Masla: mobile browsers jab keyboard kholte hain to woh "resize" karte hain
+  // ya viewport ko chhota kar dete hain, aur 100dvh is change ko turant ya
+  // sahi tarah se track nahi karta (khaas kar iOS Safari pr) — jiski wajah se
+  // poora .app box upar shift ho jata tha aur header (avatar wala) screen se
+  // bahar chala jata tha.
+  //
+  // Fix: VisualViewport API se asal visible height nikal kar --app-height
+  // CSS variable set karte hain. .app ye variable use karta hai (position:
+  // fixed + height: var(--app-height)), is liye jab keyboard khulta hai to
+  // sirf .app ka total box chhota hota hai — header apni jagah (top: 0) pr
+  // hi rehta hai, sirf .messages ka scrollable area kam hota hai. Bilkul
+  // WhatsApp jaisa behavior.
+  function syncAppHeight() {
+    const vv = window.visualViewport;
+    const h = vv ? vv.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+    // Jab visualViewport resize ho (keyboard open/close), page ko us offset
+    // ke sath top pr pin rakhte hain taake safari khud se scroll na kare.
+    if (vv) window.scrollTo(0, 0);
+  }
+
+  syncAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncAppHeight);
+    window.visualViewport.addEventListener('scroll', syncAppHeight);
+  }
+  window.addEventListener('resize', syncAppHeight);
+  window.addEventListener('orientationchange', () => setTimeout(syncAppHeight, 100));
+
+  // Textarea pr focus hote hi turant sync + thoda dobara after keyboard
+  // animation settle ho (kuch Android keyboards animate hoke khulte hain).
+  textInput.addEventListener('focus', () => {
+    syncAppHeight();
+    setTimeout(syncAppHeight, 60);
+    setTimeout(syncAppHeight, 300);
+    setTimeout(scrollToBottom, 320);
+  });
+  textInput.addEventListener('blur', () => {
+    syncAppHeight();
+    setTimeout(syncAppHeight, 60);
+    setTimeout(syncAppHeight, 300);
+  });
 
   // ---------- small helpers ----------
 
@@ -103,6 +159,10 @@
     const m = Math.floor(s / 60);
     const r = String(s % 60).padStart(2, '0');
     return `${m}:${r}`;
+  }
+
+  function formatBytes(bytes) {
+    return (bytes / (1024 * 1024)).toFixed(0) + 'MB';
   }
 
   function scrollToBottom() {
@@ -140,6 +200,98 @@
       const key = btn.dataset.wallpaper || btn.dataset.theme;
       btn.classList.toggle('selected', key === value);
     });
+  }
+
+  // ---------- reply (WhatsApp-style) ----------
+  //
+  // Flow: kisi bhi bubble (apna ya dost ka, text/media/voice/view-once sab)
+  // ko long-press karo -> reaction quickbar khulti hai jisme reply icon bhi
+  // hai. Reply tap karo -> composer ke upar us message ka mini-quote preview
+  // aa jata hai (naam + snippet). Send karne pr wo replyTo payload ke sath
+  // jata hai. Dusri taraf jab bubble render hoti hai aur usme replyTo hai,
+  // to bubble ke andar chhota quoted-reference box dikhta hai jispe tap
+  // karne se original message tak smooth-scroll ho kar highlight hota hai —
+  // ye sab already neeche renderMessage() aur attachLongPress() mein wired
+  // hai; yahan sirf reply-state helpers hain jo unhe drive karte hain.
+
+  function replySnippetFor(msg) {
+    if (msg.viewOnce) return msg.type === 'video' ? 'Video · 1 baar' : 'Photo · 1 baar';
+    if (msg.type === 'image') return 'Photo';
+    if (msg.type === 'video') return 'Video';
+    if (msg.type === 'voice') return 'Voice message';
+    return msg.text || '';
+  }
+
+  function setReplyTarget(msg) {
+    replyTarget = msg;
+    const isMine = msg.sender === myUsername;
+    replyPreviewName.textContent = isMine ? 'You' : currentOtherDisplayName();
+    replyPreviewSnippet.textContent = replySnippetFor(msg);
+    replyPreviewBar.classList.remove('hidden');
+    textInput.focus();
+  }
+
+  function clearReplyTarget() {
+    replyTarget = null;
+    replyPreviewBar.classList.add('hidden');
+  }
+
+  cancelReplyBtn.addEventListener('click', clearReplyTarget);
+
+  function scrollToMessage(id) {
+    const row = messagesEl.querySelector(`.bubble-row[data-id="${id}"]`);
+    if (!row) {
+      toast('Original message nahi mila');
+      return;
+    }
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    row.classList.add('flash');
+    setTimeout(() => row.classList.remove('flash'), 900);
+  }
+
+  function attachSwipeToReply(row, msg) {
+    let startX = 0;
+    let startY = 0;
+    let tracking = false;
+    let triggered = false;
+
+    function start(e) {
+      const p = e.touches ? e.touches[0] : e;
+      startX = p.clientX;
+      startY = p.clientY;
+      tracking = true;
+      triggered = false;
+    }
+    function move(e) {
+      if (!tracking) return;
+      const p = e.touches ? e.touches[0] : e;
+      const dx = p.clientX - startX;
+      const dy = p.clientY - startY;
+      if (Math.abs(dy) > 30) {
+        tracking = false;
+        row.style.transform = '';
+        return;
+      }
+      if (dx > 0 && dx < 90) row.style.transform = `translateX(${dx}px)`;
+      if (dx > 55 && !triggered) {
+        triggered = true;
+        if (navigator.vibrate) navigator.vibrate(10);
+      }
+    }
+    function end() {
+      if (!tracking) return;
+      tracking = false;
+      row.style.transition = 'transform 0.15s ease';
+      row.style.transform = '';
+      setTimeout(() => {
+        row.style.transition = '';
+      }, 160);
+      if (triggered) setReplyTarget(msg);
+    }
+
+    row.addEventListener('touchstart', start, { passive: true });
+    row.addEventListener('touchmove', move, { passive: true });
+    row.addEventListener('touchend', end);
   }
 
   // ---------- overlay management ----------
@@ -190,6 +342,7 @@
       closeModal();
       closeAvatarModal();
       closeReactionQuickbar();
+      clearReplyTarget();
     }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
@@ -301,6 +454,17 @@
     closeReactionQuickbar();
     const bar = document.createElement('div');
     bar.className = 'reaction-quickbar';
+
+    const replyBtn = document.createElement('button');
+    replyBtn.type = 'button';
+    replyBtn.innerHTML = replyIconSvg;
+    replyBtn.setAttribute('aria-label', 'Reply karo');
+    replyBtn.addEventListener('click', () => {
+      setReplyTarget(msg);
+      closeReactionQuickbar();
+    });
+    bar.appendChild(replyBtn);
+
     QUICK_REACTIONS.forEach((emoji) => {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -607,6 +771,34 @@
     senderLabel.textContent = isMine ? 'You' : currentOtherDisplayName();
     bubble.appendChild(senderLabel);
 
+    // Reply quote — chahe original message maine bheja ho ya dost ne,
+    // dono cases handle hote hain kyunke msg.replyTo.sender se decide
+    // hota hai quote ka naam "You" hoga ya dost ka.
+    if (msg.replyTo) {
+      const quote = document.createElement('div');
+      quote.className = 'bubble-quote';
+      const isReplyMine = msg.replyTo.sender === myUsername;
+
+      const line = document.createElement('span');
+      line.className = 'bubble-quote-line';
+      quote.appendChild(line);
+
+      const textWrap = document.createElement('div');
+      textWrap.className = 'bubble-quote-text';
+      const nameEl = document.createElement('span');
+      nameEl.className = 'bubble-quote-name';
+      nameEl.textContent = isReplyMine ? 'You' : currentOtherDisplayName();
+      const snippetEl = document.createElement('span');
+      snippetEl.className = 'bubble-quote-snippet';
+      snippetEl.textContent = msg.replyTo.preview || '';
+      textWrap.appendChild(nameEl);
+      textWrap.appendChild(snippetEl);
+      quote.appendChild(textWrap);
+
+      quote.addEventListener('click', () => scrollToMessage(msg.replyTo.id));
+      bubble.appendChild(quote);
+    }
+
     if (msg.viewOnce) {
       const inner = buildViewOnceInner(msg);
       bubble.appendChild(inner);
@@ -647,6 +839,7 @@
     row.appendChild(bubble);
     messagesEl.appendChild(row);
 
+    attachSwipeToReply(row, msg);
     renderReactions(row, msg.reactions);
     scrollToBottom();
   }
@@ -749,6 +942,9 @@
       document.getElementById('otherName').textContent = currentOtherDisplayName();
       messagesEl.querySelectorAll('.bubble-row.their .bubble-sender').forEach((el) => {
         el.textContent = currentOtherDisplayName();
+      });
+      messagesEl.querySelectorAll('.bubble-quote-name').forEach((el) => {
+        if (el.textContent !== 'You') el.textContent = currentOtherDisplayName();
       });
       toast('Naam save ho gaya');
     } catch (err) {
@@ -964,9 +1160,14 @@
       socket.emit('stop_typing');
       isTypingSent = false;
     }
-    socket.emit('send_message', { text, type: 'text', receiver: otherUser }, (ack) => {
+    const payload = { text, type: 'text', receiver: otherUser };
+    if (replyTarget) {
+      payload.replyTo = { id: replyTarget._id, sender: replyTarget.sender, preview: replySnippetFor(replyTarget) };
+    }
+    socket.emit('send_message', payload, (ack) => {
       if (!ack || !ack.ok) toast(ack && ack.error ? ack.error : 'Message bhejne mein masla hua');
     });
+    clearReplyTarget();
   });
 
   // ---------- media attach ----------
@@ -984,8 +1185,9 @@
       fileInput.value = '';
       return;
     }
-    if (file.size > 25 * 1024 * 1024) {
-      toast('File 25MB se choti honi chahiye');
+    // Chhoti ya lambi, koi bhi video chal jayegi — bas 300MB tak.
+    if (file.size > MAX_MEDIA_BYTES) {
+      toast(`File ${formatBytes(MAX_MEDIA_BYTES)} se choti honi chahiye`);
       fileInput.value = '';
       return;
     }
@@ -1040,13 +1242,17 @@
           mediaUrl: data.url,
           viewOnce: wasViewOnce,
           receiver: otherUser,
-          mediaMeta: { fileName: data.fileName, size: data.size }
+          mediaMeta: { fileName: data.fileName, size: data.size },
+          ...(replyTarget
+            ? { replyTo: { id: replyTarget._id, sender: replyTarget.sender, preview: replySnippetFor(replyTarget) } }
+            : {})
         },
         (ack) => {
           if (!ack || !ack.ok) toast(ack && ack.error ? ack.error : 'Message bhejne mein masla hua');
         }
       );
       resetMediaPreview();
+      clearReplyTarget();
     } catch (err) {
       toast('Upload nahi ho saka');
     } finally {
@@ -1135,12 +1341,16 @@
           mediaUrl: data.url,
           viewOnce: false,
           receiver: otherUser,
-          mediaMeta: { duration, fileName: data.fileName, size: data.size }
+          mediaMeta: { duration, fileName: data.fileName, size: data.size },
+          ...(replyTarget
+            ? { replyTo: { id: replyTarget._id, sender: replyTarget.sender, preview: replySnippetFor(replyTarget) } }
+            : {})
         },
         (ack) => {
           if (!ack || !ack.ok) toast(ack && ack.error ? ack.error : 'Voice message bhejne mein masla hua');
         }
       );
+      clearReplyTarget();
     } catch (err) {
       toast('Voice upload nahi ho saka');
     }
