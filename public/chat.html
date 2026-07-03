@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ur-PK">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Private Chat</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <div id="appLoader" class="app-loader">
+    <div class="loader-spinner"></div>
+  </div>
+
+  <div class="app">
+    <header class="chat-header">
+      <div class="avatar" id="avatar" role="button" tabindex="0" aria-label="View profile picture" title="Profile picture dekho">
+        <span class="avatar-content" id="avatarContent">?</span>
+        <span class="online-dot" id="onlineDot"></span>
+      </div>
+      <div class="who">
+        <div class="name" id="otherName">...</div>
+        <div class="status" id="statusText">connecting…</div>
+      </div>
+      <button id="searchBtn" class="icon-btn" aria-label="Search messages" title="Search (Ctrl+K)">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      </button>
+      <button id="settingsBtn" class="icon-btn" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <button id="logoutBtn" class="icon-btn" aria-label="Logout" title="Logout">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+      </button>
+    </header>
+
+    <div id="searchBar" class="search-bar hidden">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="searchInput" placeholder="Messages mein search karo" autocomplete="off" />
+      <span id="searchCount" class="search-count"></span>
+      <button id="closeSearchBtn" class="icon-btn" aria-label="Close search">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <main id="messages" class="messages wallpaper-default" aria-live="polite"></main>
+
+    <div id="previewBar" class="preview-bar hidden">
+      <button id="cancelMediaBtn" class="icon-btn" aria-label="Cancel">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+      <div class="preview-content" id="previewContent"></div>
+      <label class="view-once-toggle" id="viewOnceLabel">
+        <input type="checkbox" id="viewOnceToggle" />
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span>1 baar</span>
+      </label>
+      <button id="sendMediaBtn" class="icon-btn send" aria-label="Send media">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>
+
+    <div id="recordingBar" class="recording-bar hidden">
+      <button id="cancelRecBtn" class="icon-btn" aria-label="Cancel recording">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+      <span class="rec-dot"></span>
+      <span id="recTimer">0:00</span>
+      <span class="rec-hint">Recording…</span>
+      <button id="stopRecBtn" class="icon-btn send" aria-label="Send voice message">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>
+
+    <div id="emojiPicker" class="emoji-picker hidden">
+      <div class="emoji-grid" id="emojiGrid"></div>
+    </div>
+
+    <form id="composer" class="composer">
+      <button type="button" id="emojiBtn" class="icon-btn" aria-label="Emoji picker">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      </button>
+      <button type="button" id="attachBtn" class="icon-btn" aria-label="Attach media">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05 12.25 20.24a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95L10.13 17.1a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+      </button>
+      <input type="file" id="fileInput" accept="image/*,video/*" hidden />
+      <textarea id="textInput" placeholder="Message" rows="1"></textarea>
+      <button type="button" id="micBtn" class="icon-btn" aria-label="Record voice message">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v4"/><path d="M8 23h8"/></svg>
+      </button>
+      <button type="submit" id="sendBtn" class="icon-btn send" aria-label="Send message">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+      </button>
+    </form>
+  </div>
+
+  <div id="viewOnceModal" class="modal hidden">
+    <div class="modal-content">
+      <button id="closeModalBtn" class="icon-btn" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+      <div id="modalMediaWrap" class="modal-media-wrap"></div>
+    </div>
+  </div>
+
+  <div id="avatarModal" class="modal hidden">
+    <div class="modal-content">
+      <button id="closeAvatarModalBtn" class="icon-btn" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+      <div class="avatar-view-photo" id="avatarViewPhoto">?</div>
+      <p class="avatar-view-name" id="avatarViewName"></p>
+    </div>
+  </div>
+
+  <div id="settingsPanel" class="sheet hidden">
+    <div class="sheet-backdrop" id="settingsBackdrop"></div>
+    <div class="sheet-content">
+      <div class="sheet-header">
+        <h2>Settings</h2>
+        <button id="closeSettingsBtn" class="icon-btn" aria-label="Close settings">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="settings-section avatar-edit">
+        <div class="avatar avatar-large" id="myAvatarPreview">?</div>
+        <div>
+          <button type="button" id="changeAvatarBtn" class="link-btn">Apni profile picture lagao</button>
+          <p class="settings-hint">Dost ko yehi dikhegi</p>
+        </div>
+        <input type="file" id="avatarInput" accept="image/*" hidden />
+      </div>
+
+      <div class="settings-section">
+        <label class="settings-label" for="nicknameInput">Dost ka naam (sirf tumhe dikhega)</label>
+        <div class="settings-row">
+          <input type="text" id="nicknameInput" placeholder="e.g. Bestie" maxlength="40" />
+          <button type="button" id="saveNicknameBtn" class="small-btn">Save</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <label class="settings-label">Wallpaper</label>
+        <div class="swatch-row" id="wallpaperSwatches">
+          <button type="button" class="wallpaper-swatch wallpaper-default" data-wallpaper="default" aria-label="Default wallpaper"></button>
+          <button type="button" class="wallpaper-swatch wallpaper-dots" data-wallpaper="dots" aria-label="Dots wallpaper"></button>
+          <button type="button" class="wallpaper-swatch wallpaper-diagonal" data-wallpaper="diagonal" aria-label="Diagonal wallpaper"></button>
+          <button type="button" class="wallpaper-swatch wallpaper-warm" data-wallpaper="warm" aria-label="Warm wallpaper"></button>
+          <button type="button" class="wallpaper-swatch wallpaper-cool" data-wallpaper="cool" aria-label="Cool wallpaper"></button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <label class="settings-label">Theme color</label>
+        <div class="swatch-row" id="themeSwatches">
+          <button type="button" class="theme-swatch theme-teal" data-theme="teal" aria-label="Teal theme"></button>
+          <button type="button" class="theme-swatch theme-indigo" data-theme="indigo" aria-label="Indigo theme"></button>
+          <button type="button" class="theme-swatch theme-rose" data-theme="rose" aria-label="Rose theme"></button>
+          <button type="button" class="theme-swatch theme-amber" data-theme="amber" aria-label="Amber theme"></button>
+          <button type="button" class="theme-swatch theme-forest" data-theme="forest" aria-label="Forest theme"></button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <label class="settings-label">Keyboard shortcuts</label>
+        <ul class="shortcut-list">
+          <li><kbd>Enter</kbd> bhejo, <kbd>Shift</kbd>+<kbd>Enter</kbd> nayi line</li>
+          <li><kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>K</kbd> search</li>
+          <li><kbd>Esc</kbd> band karo</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/chat.js"></script>
+</body>
+</html>

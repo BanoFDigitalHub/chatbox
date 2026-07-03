@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ur-PK">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Private Chat — Login</title>
+<link rel="stylesheet" href="/css/auth.css" />
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="auth-card">
+
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-10-9.3C.6 8.4 2 5 5.5 5c2 0 3.4 1.1 4.2 2.3C10.5 6.1 11.9 5 13.9 5 17.4 5 18.8 8.4 22 11.7 19.5 16.4 12 21 12 21Z"/></svg>
+        <p class="eyebrow">I love you</p>
+        <h1 class="big-name">Abdullah</h1>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <form id="loginForm" class="auth-form is-active" autocomplete="on">
+        <label>
+          <span>Username</span>
+          <input type="text" id="username" autocomplete="username" required />
+        </label>
+
+        <label class="pw-field">
+          <span>Password</span>
+          <div class="pw-wrap">
+            <input type="password" id="password" autocomplete="current-password" required />
+            <button type="button" class="pw-toggle" data-target="password" aria-label="Password dikhao/chupao">
+              <svg class="eye-open" viewBox="0 0 24 24"><path d="M12 5c-5.5 0-9.5 4.5-10.5 7 1 2.5 5 7 10.5 7s9.5-4.5 10.5-7c-1-2.5-5-7-10.5-7Zm0 11.5A4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 0 1 0 9Zm0-2A2.5 2.5 0 1 0 12 9.5a2.5 2.5 0 0 0 0 5Z"/></svg>
+              <svg class="eye-closed" viewBox="0 0 24 24" hidden><path d="m3.28 2.22 18.5 18.5-1.06 1.06-3.06-3.06A11.6 11.6 0 0 1 12 19c-5.5 0-9.5-4.5-10.5-7 .5-1.25 1.9-3.4 4.06-5.06L2.22 3.28l1.06-1.06ZM12 7.5c.4 0 .78.06 1.14.16L8.9 12A4.5 4.5 0 0 1 12 7.5Zm0 9A4.5 4.5 0 0 0 16.34 11l1.5 1.5C16.6 15 14.5 16.5 12 16.5Zm9.5-4.5c-.55 1.36-1.9 3.34-3.9 4.94l-1.44-1.44c1.5-1.16 2.6-2.62 3.24-3.5-1-2.5-5-7-10.4-7-1 0-1.94.16-2.82.44L5.1 6.86A11.7 11.7 0 0 1 12 5c5.5 0 9.5 4.5 10.5 7Z"/></svg>
+            </button>
+          </div>
+        </label>
+
+        <p id="loginError" class="error" role="alert"></p>
+        <button type="submit" id="loginBtn">Login</button>
+
+        <button type="button" id="showChangePw" class="link-btn">Password change karna hai?</button>
+      </form>
+
+      <!-- CHANGE PASSWORD FORM -->
+      <form id="changePwForm" class="auth-form" autocomplete="off">
+        <label>
+          <span>Username</span>
+          <input type="text" id="cpUsername" autocomplete="username" required />
+        </label>
+
+        <label class="pw-field">
+          <span>Current password</span>
+          <div class="pw-wrap">
+            <input type="password" id="cpCurrent" autocomplete="current-password" required />
+            <button type="button" class="pw-toggle" data-target="cpCurrent" aria-label="Password dikhao/chupao">
+              <svg class="eye-open" viewBox="0 0 24 24"><path d="M12 5c-5.5 0-9.5 4.5-10.5 7 1 2.5 5 7 10.5 7s9.5-4.5 10.5-7c-1-2.5-5-7-10.5-7Zm0 11.5A4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 0 1 0 9Zm0-2A2.5 2.5 0 1 0 12 9.5a2.5 2.5 0 0 0 0 5Z"/></svg>
+              <svg class="eye-closed" viewBox="0 0 24 24" hidden><path d="m3.28 2.22 18.5 18.5-1.06 1.06-3.06-3.06A11.6 11.6 0 0 1 12 19c-5.5 0-9.5-4.5-10.5-7 .5-1.25 1.9-3.4 4.06-5.06L2.22 3.28l1.06-1.06ZM12 7.5c.4 0 .78.06 1.14.16L8.9 12A4.5 4.5 0 0 1 12 7.5Zm0 9A4.5 4.5 0 0 0 16.34 11l1.5 1.5C16.6 15 14.5 16.5 12 16.5Zm9.5-4.5c-.55 1.36-1.9 3.34-3.9 4.94l-1.44-1.44c1.5-1.16 2.6-2.62 3.24-3.5-1-2.5-5-7-10.4-7-1 0-1.94.16-2.82.44L5.1 6.86A11.7 11.7 0 0 1 12 5c5.5 0 9.5 4.5 10.5 7Z"/></svg>
+            </button>
+          </div>
+        </label>
+
+        <label class="pw-field">
+          <span>Naya password</span>
+          <div class="pw-wrap">
+            <input type="password" id="cpNew" autocomplete="new-password" required minlength="6" />
+            <button type="button" class="pw-toggle" data-target="cpNew" aria-label="Password dikhao/chupao">
+              <svg class="eye-open" viewBox="0 0 24 24"><path d="M12 5c-5.5 0-9.5 4.5-10.5 7 1 2.5 5 7 10.5 7s9.5-4.5 10.5-7c-1-2.5-5-7-10.5-7Zm0 11.5A4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 0 1 0 9Zm0-2A2.5 2.5 0 1 0 12 9.5a2.5 2.5 0 0 0 0 5Z"/></svg>
+              <svg class="eye-closed" viewBox="0 0 24 24" hidden><path d="m3.28 2.22 18.5 18.5-1.06 1.06-3.06-3.06A11.6 11.6 0 0 1 12 19c-5.5 0-9.5-4.5-10.5-7 .5-1.25 1.9-3.4 4.06-5.06L2.22 3.28l1.06-1.06ZM12 7.5c.4 0 .78.06 1.14.16L8.9 12A4.5 4.5 0 0 1 12 7.5Zm0 9A4.5 4.5 0 0 0 16.34 11l1.5 1.5C16.6 15 14.5 16.5 12 16.5Zm9.5-4.5c-.55 1.36-1.9 3.34-3.9 4.94l-1.44-1.44c1.5-1.16 2.6-2.62 3.24-3.5-1-2.5-5-7-10.4-7-1 0-1.94.16-2.82.44L5.1 6.86A11.7 11.7 0 0 1 12 5c5.5 0 9.5 4.5 10.5 7Z"/></svg>
+            </button>
+          </div>
+        </label>
+
+        <label class="pw-field">
+          <span>Naya password (dubara)</span>
+          <div class="pw-wrap">
+            <input type="password" id="cpConfirm" autocomplete="new-password" required minlength="6" />
+            <button type="button" class="pw-toggle" data-target="cpConfirm" aria-label="Password dikhao/chupao">
+              <svg class="eye-open" viewBox="0 0 24 24"><path d="M12 5c-5.5 0-9.5 4.5-10.5 7 1 2.5 5 7 10.5 7s9.5-4.5 10.5-7c-1-2.5-5-7-10.5-7Zm0 11.5A4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 0 1 0 9Zm0-2A2.5 2.5 0 1 0 12 9.5a2.5 2.5 0 0 0 0 5Z"/></svg>
+              <svg class="eye-closed" viewBox="0 0 24 24" hidden><path d="m3.28 2.22 18.5 18.5-1.06 1.06-3.06-3.06A11.6 11.6 0 0 1 12 19c-5.5 0-9.5-4.5-10.5-7 .5-1.25 1.9-3.4 4.06-5.06L2.22 3.28l1.06-1.06ZM12 7.5c.4 0 .78.06 1.14.16L8.9 12A4.5 4.5 0 0 1 12 7.5Zm0 9A4.5 4.5 0 0 0 16.34 11l1.5 1.5C16.6 15 14.5 16.5 12 16.5Zm9.5-4.5c-.55 1.36-1.9 3.34-3.9 4.94l-1.44-1.44c1.5-1.16 2.6-2.62 3.24-3.5-1-2.5-5-7-10.4-7-1 0-1.94.16-2.82.44L5.1 6.86A11.7 11.7 0 0 1 12 5c5.5 0 9.5 4.5 10.5 7Z"/></svg>
+            </button>
+          </div>
+        </label>
+
+        <p id="cpError" class="error" role="alert"></p>
+        <p id="cpSuccess" class="success" role="status"></p>
+        <button type="submit" id="cpBtn">Password update karo</button>
+
+        <button type="button" id="showLogin" class="link-btn">Wapas login pr jao</button>
+      </form>
+
+    </div>
+  </div>
+  <script src="/js/login.js"></script>
+</body>
+</html>
