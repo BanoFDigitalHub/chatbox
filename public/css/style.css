@@ -162,6 +162,7 @@ input, textarea { font-family: inherit; }
   border-left: 1px solid var(--border);
   border-right: 1px solid var(--border);
   position: relative;
+  overflow: hidden; /* sirf .messages scroll kare, poora .app nahi */
 }
 
 .chat-header {
@@ -173,6 +174,9 @@ input, textarea { font-family: inherit; }
   border-bottom: 1px solid var(--border);
   background: var(--surface);
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 .avatar {
@@ -251,6 +255,9 @@ input, textarea { font-family: inherit; }
   border-bottom: 1px solid var(--border);
   color: var(--text-secondary);
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 19;
 }
 .search-bar input {
   flex: 1;
@@ -267,6 +274,7 @@ input, textarea { font-family: inherit; }
 .messages {
   flex: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 16px;
   display: flex;
   flex-direction: column;
